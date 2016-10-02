@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+#
+# steamtricks provides workarounds for problems with Steam on Linux
+#
+
+STEAM_DIR=~/.local/share/Steam
+STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
+
+strip_quotes()
+{
+  local clean="$1"
+  clean="${clean%\"}"
+  clean="${clean#\"}"
+  echo "$clean"
+}
+
+# Many apps also ship a libstdc that causes issues in the same way the steam
+# runtime version of the lib does. As such parse the config to get a list of
+# library folders to search and remove such files. An example of a game that
+# will not launch without this fix is Portal 2 (app 620). Unfortunately, there
+# does not appear to be a method for running the script after a game has
+# downloaded or before it launches so at best a steam restart will work.
+steam_library_directories_clean()
+{
+  echo "parsing libraryfolders.vdf..."
+  local CONFIG=$STEAM_DIR/steamapps/libraryfolders.vdf
+  local keys=($(cut -f2 "$CONFIG"))
+  local values=($(cut -f4 "$CONFIG"))
+  # default steam library directory not in CONFIG file, nor runtime
+  directories=("$STEAM_RUNTIME" "$STEAM_DIR/steamapps")
+  for ((i = 0; i < ${#keys[@]}; i++))
+  do
+    key=$(strip_quotes "${keys[$i]}")
+
+    # check if key is numeric instead of CONFIG option
+    if [ "$key" -eq "$key" ] 2>/dev/null; then
+      value=$(strip_quotes "${values[$i]}")
+      directories+=("$value/steamapps")
+    fi
+  done
+
+  echo "removing troublesome libraries..."
+  for dir in "${directories[@]}"; do
+    echo "-> checking $dir"
+    find "$dir" -type f -name "libstdc*" -print -delete
+  done
+}
+
+steam_content_log_watch()
+{
+  tail -fn0 "$STEAM_DIR/logs/content_log.txt" | \
+  while read line ; do
+    echo "$line" | grep "update changed : None"
+    if [ $? = 0 ] ; then
+      steam_library_directories_clean
+    fi
+  done
+}
+
+steamtricks_usage()
+{
+  cat <<_EOF_
+Usage: $0 [options] command
+
+Options:
+    --watch           Watch Steam logs for relevant activity
+-h, --help            Display this message and exit
+
+Commands:
+clean                 Clean steam-runtime and steamapps directories
+_EOF_
+}
+
+steamtricks_handle_option()
+{
+  case "$1" in
+    --watch) STEAMTRICKS_WATCH=1 ;;
+    -h|--help) steamtricks_usage ; exit 0 ;;
+    -*) echo "unknown option $1" ; exit 1 ;;
+    *) return 1 ;;
+  esac
+  return 0
+}
+
+while steamtricks_handle_option $1
+do
+  shift
+done
+
+steam_library_directories_clean
+
+if test "$STEAMTRICKS_WATCH" == 1 ; then
+  steam_content_log_watch
+fi

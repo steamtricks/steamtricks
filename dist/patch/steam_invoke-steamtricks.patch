@@ -1,0 +1,25 @@
+From 55ddf909df868c24dee22187c61f5f60082d319d Mon Sep 17 00:00:00 2001
+From: boombatower <jimmy@boombatower.com>
+Date: Sun, 2 Oct 2016 03:03:56 -0500
+Subject: [PATCH] Invoke steamtricks if available.
+
+---
+ steam | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/steam b/steam
+index 1b71982..4bfd739 100644
+--- a/steam
++++ b/steam
+@@ -1,4 +1,8 @@
+ #!/usr/bin/env bash
++if [ -x "$(which steamtricks)" ] ; then
++  steamtricks --watch &
++fi
++
+ #
+ # This is the Steam script that typically resides in /usr/bin
+ # It will create the Steam bootstrap if necessary and then launch steam.
+-- 
+2.10.0
+
