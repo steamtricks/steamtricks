@@ -8,7 +8,7 @@
 PID_FILE=~/.steamtrickspid
 STEAM_STARTUP_MAX=120
 STEAM_LIB_PREFIX=/usr/lib/steam
-STEAM_OPENSSL_REPLACE=1
+STEAM_OPENSSL_REPLACE=0
 
 # run-time constants
 STEAM_DIR=~/.local/share/Steam
