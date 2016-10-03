@@ -6,6 +6,7 @@
 
 # build-time constants
 PID_FILE=~/.steamtrickspid
+STEAM_STARTUP_MAX=120
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=1
 
@@ -55,13 +56,26 @@ steam_library_directories_clean()
 
 steam_content_log_watch()
 {
-  tail -fn0 "$STEAM_DIR/logs/content_log.txt" | \
+  echo -n "waiting for steam to start..."
+  local tries=0
+  until pgrep -xo steam > /dev/null ; do
+    if [ $((tries++)) -eq $STEAM_STARTUP_MAX ] ; then
+     echo "failed after $STEAM_STARTUP_MAX seconds"
+     exit 1
+    fi
+    sleep 1
+  done
+  echo "done"
+
+  tail --pid $(pgrep -xo steam) -fn0 "$STEAM_DIR/logs/content_log.txt" | \
   while read line ; do
     echo "$line" | grep "update changed : None"
     if [ $? = 0 ] ; then
       steam_library_directories_clean
     fi
   done
+
+  echo "steam quit, exit"
 }
 
 steam_lib_replace()
