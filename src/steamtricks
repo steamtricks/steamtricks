@@ -5,6 +5,7 @@
 #
 
 # build-time constants
+PID_FILE=~/.steamtrickspid
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=1
 
@@ -115,6 +116,15 @@ steamtricks_handle_option()
   esac
   return 0
 }
+
+# pid file to detect already running
+if [ -f "$PID_FILE" ] ; then
+  echo "already running"
+  exit 1
+fi
+trap "rm -f -- '$PID_FILE'" EXIT
+echo $$ > "$PID_FILE"
+
 
 while steamtricks_handle_option $1
 do
