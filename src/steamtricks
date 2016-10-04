@@ -6,13 +6,20 @@
 
 # build-time constants
 PID_FILE=~/.steamtrickspid
-STEAM_STARTUP_MAX=120
+CONFIG_DIR=~/.local/share/steamtricks
+CONFIG_RC="$CONFIG_DIR/steamtricksrc"
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=0
 
 # run-time constants
 STEAM_DIR=~/.local/share/Steam
 STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
+
+# config defaults
+C_STEAM_STARTUP_MAX=120
+
+_C_VERSION=20161003
+
 
 strip_quotes()
 {
@@ -59,8 +66,8 @@ steam_content_log_watch()
   echo -n "waiting for steam to start..."
   local tries=0
   until pgrep -xo steam > /dev/null ; do
-    if [ $((tries++)) -eq $STEAM_STARTUP_MAX ] ; then
-     echo "failed after $STEAM_STARTUP_MAX seconds"
+    if [ $((tries++)) -eq $C_STEAM_STARTUP_MAX ] ; then
+     echo "failed after $C_STEAM_STARTUP_MAX seconds"
      exit 1
     fi
     sleep 1
@@ -106,6 +113,35 @@ steam_openssl_replace()
   done
 }
 
+steamtricks_config()
+{
+  if [ ! -d "$CONFIG_DIR" ] ; then
+    mkdir -p "$CONFIG_DIR"
+  fi
+
+  if [ -e "$CONFIG_RC" ] ; then
+    source "$CONFIG_RC"
+    if [ -z "$C_VERSION" ] || [ $C_VERSION -lt $_C_VERSION ] ; then
+      C_VERSION=$_C_VERSION
+      # config is already loaded, remove config and re-write
+      rm "$CONFIG_RC"
+    fi
+  fi
+
+  if [ ! -e "$CONFIG_RC" ] ; then
+    steamtricks_config_print > "$CONFIG_RC"
+  fi
+}
+
+steamtricks_config_print()
+{
+  echo "#!/usr/bin/env bash"
+  echo "# $(date)"
+  echo
+
+  ( set -o posix ; set ) | grep ^C_
+}
+
 steamtricks_usage()
 {
   cat <<_EOF_
@@ -145,6 +181,7 @@ fi
 trap "rm -f -- '$PID_FILE'" EXIT
 echo $$ > "$PID_FILE"
 
+steamtricks_config
 steam_library_directories_clean
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace
