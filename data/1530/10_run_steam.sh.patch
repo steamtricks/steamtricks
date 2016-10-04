@@ -1,0 +1,8 @@
+diff --git a/run_steam.sh b/run_steam.sh
+new file mode 100755
+index 0000000..cc88ca5
+--- /dev/null
++++ b/run_steam.sh
+@@ -0,0 +1,2 @@
++#!/bin/bash
++./multiwinia.bin.x86
