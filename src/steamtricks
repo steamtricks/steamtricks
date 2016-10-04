@@ -80,6 +80,23 @@ steam_library_directories()
   )
 }
 
+steam_app_installdir()
+{
+  local appid=$1
+  local manifest
+  local IFS=$'\n' # allow for spaces in directories
+  for dir in $(steam_library_directories) ; do
+    manifest="$dir/appmanifest_$appid.acf"
+    if [ -f "$manifest" ] ; then
+      (
+        eval $(keyvalue_parse "$manifest")
+        echo "$dir/common/$AppState_installdir"
+      )
+      break
+    fi
+  done
+}
+
 steamtricks_fix_fetch()
 {
   notify FIX_FETCH "fetching fix for app $1"
@@ -88,6 +105,9 @@ steamtricks_fix_fetch()
 steamtricks_fix_apply()
 {
   notify FIX_APPLY "applying fix for app $1"
+
+  dir=$(steam_app_installdir $1)
+  remove_incompatible_files "$dir"
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
@@ -144,7 +164,6 @@ steam_content_log_watch()
     if [ $? = 0 ] ; then
       local parts=($line)
       steamtricks_fix_apply ${parts[3]}
-      remove_incompatible_files_all_directories
     fi
   done
 
