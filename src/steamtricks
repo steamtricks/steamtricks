@@ -119,12 +119,6 @@ steamtricks_fix_apply()
   local removed=$(remove_incompatible_files "$app_dir")
   local applied=0
 
-  # automatically use development copy if running out of git tree
-  local STEAMTRICKS_DATA_DIR=$STEAMTRICKS_DATA_DIR
-  if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
-    STEAMTRICKS_DATA_DIR="$STEAMTRICKS_DIR/../data"
-  fi
-
   local data_dir="$STEAMTRICKS_DATA_DIR/$app_id"
   if [ -d "$data_dir" ] ; then
     echo "found $data_dir..."
@@ -275,6 +269,14 @@ steam_openssl_replace()
   done
 }
 
+steamtricks_data_dir()
+{
+  # automatically use development copy if running out of git tree
+  if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
+    STEAMTRICKS_DATA_DIR="$STEAMTRICKS_DIR/../data"
+  fi
+}
+
 steamtricks_config()
 {
   if [ ! -d "$CONFIG_DIR" ] ; then
@@ -343,12 +345,15 @@ fi
 trap "rm -f -- '$PID_FILE'" EXIT
 echo $$ > "$PID_FILE"
 
+# initial boot
 steamtricks_config
 remove_incompatible_files_all_directories
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace
 fi
 
+# watch phase
+steamtricks_data_dir
 if test "$STEAMTRICKS_WATCH" == 1 ; then
   steam_content_log_watch
 fi
