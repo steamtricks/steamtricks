@@ -109,7 +109,7 @@ steam_content_log_watch()
       steamtricks_fix_fetch ${parts[3]}
     fi
 
-    echo "$line" | grep "state changed : Fully Installed,$" > /dev/null
+    echo "$line" | grep "state changed : Fully Installed,Update Running,$" > /dev/null
     if [ $? = 0 ] ; then
       local parts=($line)
       steamtricks_fix_apply ${parts[3]}
