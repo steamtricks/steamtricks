@@ -14,10 +14,20 @@ STEAM_DIR=~/.local/share/Steam
 STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
 
 # config defaults
+C_NOTIFICATION=1
+C_NOTIFICATION_CLEAN=1
 C_STEAM_STARTUP_MAX=120
 
 _C_VERSION=20161003
 
+
+notify()
+{
+  eval local toggle=\$$"C_NOTIFICATION_$1"
+  if test "$C_NOTIFICATION" == 1 && test "$toggle" == 1 ; then
+    notify-send "steamtricks" "$2" --icon=steam
+  fi
+}
 
 strip_quotes()
 {
@@ -55,7 +65,10 @@ steam_library_directories_clean()
   echo "removing troublesome libraries..."
   for dir in "${directories[@]}"; do
     echo "-> checking $dir"
-    find "$dir" -type f -name "libstdc*" -print -delete
+    local count=$(find "$dir" -type f -name "libstdc*" -print -delete | tee /dev/stderr | wc -l)
+    if [[ $count -gt 0 ]] ; then
+      notify CLEAN "$count troublesome file(s) removed"
+    fi
   done
 }
 
