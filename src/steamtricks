@@ -10,8 +10,6 @@ CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=0
-
-# run-time constants
 STEAM_DIR=~/.local/share/Steam
 STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
 
