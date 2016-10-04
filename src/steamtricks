@@ -5,6 +5,9 @@
 #
 
 # build-time constants
+STEAMTRICKS_SCRIPT="$(cd "${0%/*}" && echo "$PWD")/${0##*/}"
+STEAMTRICKS_DIR="$(dirname "$STEAMTRICKS_SCRIPT")"
+STEAMTRICKS_DATA_DIR=/usr/share/steamtricks
 PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
@@ -80,7 +83,7 @@ steam_library_directories()
   )
 }
 
-steam_app_installdir()
+steam_app_manifest()
 {
   local appid=$1
   local manifest
@@ -88,10 +91,7 @@ steam_app_installdir()
   for dir in $(steam_library_directories) ; do
     manifest="$dir/appmanifest_$appid.acf"
     if [ -f "$manifest" ] ; then
-      (
-        eval $(keyvalue_parse "$manifest")
-        echo "$dir/common/$AppState_installdir"
-      )
+      echo "$manifest"
       break
     fi
   done
@@ -104,10 +104,78 @@ steamtricks_fix_fetch()
 
 steamtricks_fix_apply()
 {
-  notify FIX_APPLY "applying fix for app $1"
+  local app_id=$1
+  local manifest=$(steam_app_manifest $app_id)
+  if [[ -z "$manifest" ]] ; then
+    echo "no manifest found for app $app_id"
+    exit 1
+  fi
 
-  dir=$(steam_app_installdir $1)
-  remove_incompatible_files "$dir"
+  eval $(keyvalue_parse "$manifest")
+  local app_name="$AppState_name"
+  local app_dir="$(dirname "$manifest")/common/$AppState_installdir"
+
+  local failed=0
+  local removed=$(remove_incompatible_files "$app_dir")
+  local applied=0
+
+  # automatically use development copy if running out of git tree
+  local STEAMTRICKS_DATA_DIR=$STEAMTRICKS_DATA_DIR
+  if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
+    STEAMTRICKS_DATA_DIR="$STEAMTRICKS_DIR/../data"
+  fi
+
+  local data_dir="$STEAMTRICKS_DATA_DIR/$app_id"
+  if [ -d "$data_dir" ] ; then
+    echo "found $data_dir..."
+    cd $app_dir
+
+    if [ -f "$data_dir/pre" ] ; then
+      echo "executing $data_dir/pre"
+      . "$data_dir/pre"
+    fi
+
+    if [ -f "$data_dir/remove" ] ; then
+      ((removed+=$(rm -v $(cat "$data_dir/remove") | tee /dev/stderr | wc -l)))
+      failed=$?
+    fi
+
+    # could pipe the list of patches, but loose access to variable state
+    for patch in $(find "$data_dir" -type f -name "*.patch") ; do
+      echo "patch $patch..."
+      patch -p1 --dry-run --unified --forward -i "$patch"
+      if [ $? -eq 0 ] ; then
+        patch -p1 --unified --forward -i "$patch"
+      else
+        patch -t -p1 --dry-run --unified --reverse -i "$patch"
+      fi
+
+      if [ $? -eq 0 ] ; then
+        ((applied++))
+      else
+        failed=1
+      fi
+    done
+
+    if [ -f "$data_dir/post" ] ; then
+      echo "executing $data_dir/post"
+      . "$data_dir/post"
+    fi
+
+    # prints directory to which it changes
+    cd - > /dev/null
+  fi
+
+  local status
+  if [ $failed -eq 0 ] ; then
+    status=success
+  else
+    status=failure
+  fi
+
+  local message="app: $app_name, result: $status, removed: $removed, applied: $applied"
+  echo "$message"
+  notify FIX_APPLY "$message"
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
