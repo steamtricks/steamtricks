@@ -118,21 +118,23 @@ steamtricks_fix_apply()
 # downloaded or before it launches so at best a steam restart will work.
 remove_incompatible_files()
 {
-  echo "removing troublesome files..."
+  echo "removing troublesome files..." >&2
   local IFS=$'\n' # allow for spaces in directories
+  local count=0
   for dir in $*; do
-    echo "-> checking $dir"
-    local count=$(find "$dir" -type f -name "libstdc*" -print -delete | tee /dev/stderr | wc -l)
-    if [[ $count -gt 0 ]] ; then
-      notify CLEAN "$count troublesome file(s) removed"
-    fi
+    echo "-> checking $dir" >&2
+    ((count+=$(find "$dir" -type f -name "libstdc*" -print -delete | tee /dev/stderr | wc -l)))
   done
+  echo $count
 }
 
 remove_incompatible_files_all_directories()
 {
   local IFS=$'\n'
-  remove_incompatible_files $STEAM_RUNTIME$IFS$(steam_library_directories)
+  local count=$(remove_incompatible_files $STEAM_RUNTIME$IFS$(steam_library_directories))
+  if [ $count -gt 0 ] ; then
+    notify CLEAN "$count troublesome file(s) removed"
+  fi
 }
 
 steam_content_log_watch()
