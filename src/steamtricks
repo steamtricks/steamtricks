@@ -112,6 +112,7 @@ steamtricks_usage()
 Usage: $0 [options] command
 
 Options:
+-f, --force           Force launch by removing pid file
     --watch           Watch Steam logs for relevant activity
 -h, --help            Display this message and exit
 
@@ -123,6 +124,7 @@ _EOF_
 steamtricks_handle_option()
 {
   case "$1" in
+    -f|--force) rm  -f -- "$PID_FILE" ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
     -*) echo "unknown option $1" ; exit 1 ;;
