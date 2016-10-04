@@ -108,7 +108,7 @@ steamtricks_fix_apply()
   local manifest=$(steam_app_manifest $app_id)
   if [[ -z "$manifest" ]] ; then
     echo "no manifest found for app $app_id"
-    exit 1
+    return 1
   fi
 
   eval $(keyvalue_parse "$manifest")
@@ -164,6 +164,9 @@ steamtricks_fix_apply()
 
     # prints directory to which it changes
     cd - > /dev/null
+  elif [ $removed -eq 0 ] ; then
+    echo "no changes made"
+    return 0
   fi
 
   local status
