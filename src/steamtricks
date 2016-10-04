@@ -129,6 +129,10 @@ steamtricks_fix_apply()
   if [ -d "$data_dir" ] ; then
     echo "found $data_dir..."
     cd $app_dir
+    if [ ! $? -eq 0 ] ; then
+      echo "unable to enter app_dir"
+      return 1
+    fi
 
     if [ -f "$data_dir/pre" ] ; then
       echo "executing $data_dir/pre"
