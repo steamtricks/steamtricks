@@ -133,6 +133,10 @@ steamtricks_handle_option()
   return 0
 }
 
+while steamtricks_handle_option $1 ; do
+  shift
+done
+
 # pid file to detect already running
 if [ -f "$PID_FILE" ] ; then
   echo "already running"
@@ -140,12 +144,6 @@ if [ -f "$PID_FILE" ] ; then
 fi
 trap "rm -f -- '$PID_FILE'" EXIT
 echo $$ > "$PID_FILE"
-
-
-while steamtricks_handle_option $1
-do
-  shift
-done
 
 steam_library_directories_clean
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
