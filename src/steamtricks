@@ -39,6 +39,47 @@ strip_quotes()
   echo "$clean"
 }
 
+keyvalue_parse()
+{
+  local file="$1"
+  local match="$2"
+
+  local section=()
+  local previous
+  local previous_consumed=0
+  local IFS=$'\t\n'
+  for line in $(< "$file") ; do
+    line=$(strip_quotes "$line")
+    case $line in
+      \{) section+=("$previous") ;;
+      \}) unset section[${#section[@]}-1] ;;
+      *)
+      if [[ "$previous" != "" && "$previous" != "{" && "$previous" != "}" ]] ; then
+        if [ $previous_consumed -eq 1 ] ; then
+          previous_consumed=0
+        else
+          IFS='_'; echo "${section[*]}_$previous='$line'"
+          previous_consumed=1
+        fi
+      fi
+      ;;
+    esac
+    previous=$line
+  done
+}
+
+steam_library_directories()
+{
+  echo "parsing libraryfolders.vdf..." >&2
+  echo "$STEAM_DIR/steamapps"
+  (
+    eval $(keyvalue_parse "$STEAM_DIR/steamapps/libraryfolders.vdf")
+    for var in $(compgen -A variable | grep -E "LibraryFolders_[0-9]+$") ; do
+      eval echo \$$var/steamapps
+    done
+  )
+}
+
 steamtricks_fix_fetch()
 {
   notify FIX_FETCH "fetching fix for app $1"
@@ -55,33 +96,23 @@ steamtricks_fix_apply()
 # will not launch without this fix is Portal 2 (app 620). Unfortunately, there
 # does not appear to be a method for running the script after a game has
 # downloaded or before it launches so at best a steam restart will work.
-steam_library_directories_clean()
+remove_incompatible_files()
 {
-  echo "parsing libraryfolders.vdf..."
-  local CONFIG=$STEAM_DIR/steamapps/libraryfolders.vdf
-  local keys=($(cut -f2 "$CONFIG"))
-  local values=($(cut -f4 "$CONFIG"))
-  # default steam library directory not in CONFIG file, nor runtime
-  directories=("$STEAM_RUNTIME" "$STEAM_DIR/steamapps")
-  for ((i = 0; i < ${#keys[@]}; i++))
-  do
-    key=$(strip_quotes "${keys[$i]}")
-
-    # check if key is numeric instead of CONFIG option
-    if [ "$key" -eq "$key" ] 2>/dev/null; then
-      value=$(strip_quotes "${values[$i]}")
-      directories+=("$value/steamapps")
-    fi
-  done
-
-  echo "removing troublesome libraries..."
-  for dir in "${directories[@]}"; do
+  echo "removing troublesome files..."
+  local IFS=$'\n' # allow for spaces in directories
+  for dir in $*; do
     echo "-> checking $dir"
     local count=$(find "$dir" -type f -name "libstdc*" -print -delete | tee /dev/stderr | wc -l)
     if [[ $count -gt 0 ]] ; then
       notify CLEAN "$count troublesome file(s) removed"
     fi
   done
+}
+
+remove_incompatible_files_all_directories()
+{
+  local IFS=$'\n'
+  remove_incompatible_files $STEAM_RUNTIME$IFS$(steam_library_directories)
 }
 
 steam_content_log_watch()
@@ -113,7 +144,7 @@ steam_content_log_watch()
     if [ $? = 0 ] ; then
       local parts=($line)
       steamtricks_fix_apply ${parts[3]}
-      steam_library_directories_clean
+      remove_incompatible_files_all_directories
     fi
   done
 
@@ -217,7 +248,7 @@ trap "rm -f -- '$PID_FILE'" EXIT
 echo $$ > "$PID_FILE"
 
 steamtricks_config
-steam_library_directories_clean
+remove_incompatible_files_all_directories
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace
 fi
