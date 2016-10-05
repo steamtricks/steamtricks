@@ -213,12 +213,12 @@ remove_incompatible_files()
   echo $count
 }
 
-remove_incompatible_files_all_directories()
+# TODO replace with bootstrap phase watching
+remove_incompatible_files_runtime()
 {
-  local IFS=$'\n'
-  local count=$(remove_incompatible_files $STEAM_RUNTIME$IFS$(steam_library_directories))
+  local count=$(remove_incompatible_files $STEAM_RUNTIME)
   if [ $count -gt 0 ] ; then
-    notify CLEAN "$count troublesome file(s) removed"
+    notify CLEAN "$count troublesome file(s) removed from steam-runtime"
   fi
 }
 
@@ -363,7 +363,7 @@ echo $$ > "$PID_FILE"
 
 # initial boot
 steamtricks_config
-remove_incompatible_files_all_directories
+remove_incompatible_files_runtime
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace
 fi
