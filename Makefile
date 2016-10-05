@@ -4,9 +4,10 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 
 PREFIX = /usr
+VERSION="build-$(shell date +%F)"
 
 all:
-	@ echo "Nothing to compile. Use: install"
+	sed -i 's/STEAMTRICKS_VERSION=".*"/STEAMTRICKS_VERSION=$(VERSION)/' src/steamtricks
 
 
 install:
