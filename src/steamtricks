@@ -129,7 +129,7 @@ steamtricks_fix_apply()
       return 1
     fi
 
-    streamtricks_fix_script "$data_dir/pre"
+    streamtricks_fix_script "$data_dir/00-pre"
     if [ $? -eq 1 ] ; then
       failed=1
     fi
@@ -157,7 +157,7 @@ steamtricks_fix_apply()
       fi
     done
 
-    streamtricks_fix_script "$data_dir/post"
+    streamtricks_fix_script "$data_dir/99-post"
     if [ $? -eq 1 ] ; then
       failed=1
     fi
