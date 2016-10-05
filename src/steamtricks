@@ -140,6 +140,7 @@ steamtricks_fix_apply()
     fi
 
     # could pipe the list of patches, but loose access to variable state
+    local IFS=$'\n' # allow for spaces in directories
     for patch in $(find "$data_dir" -type f -name "*.patch") ; do
       echo "patch $patch..."
       patch -p1 --dry-run --unified --forward -i "$patch"
