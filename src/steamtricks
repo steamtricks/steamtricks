@@ -19,13 +19,14 @@ STEAM_DIR=~/.local/share/Steam
 STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
 
 # config defaults
+C_DATA_DIR=
 C_NOTIFICATION=1
 C_NOTIFICATION_CLEAN=1
 C_NOTIFICATION_FIX_APPLY=1
 C_NOTIFICATION_FIX_FETCH=1
 C_STEAM_STARTUP_MAX=120
 
-_C_VERSION=20161003
+_C_VERSION=20161005
 
 
 notify()
@@ -289,6 +290,11 @@ steam_openssl_replace()
 
 steamtricks_data_dir()
 {
+  # check for config override, but allow git to win
+  if [ ! -z "$C_DATA_DIR" ] ; then
+    STEAMTRICKS_DATA_REPO_DIR="$C_DATA_DIR"
+  fi
+
   # automatically use development copy if running out of git tree
   if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
     STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DIR/../data"
