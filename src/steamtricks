@@ -122,7 +122,7 @@ steamtricks_fix_apply()
   local data_dir="$STEAMTRICKS_DATA_DIR/$app_id"
   if [ -d "$data_dir" ] ; then
     echo "found $data_dir..."
-    cd $app_dir
+    cd "$app_dir"
     if [ ! $? -eq 0 ] ; then
       echo "unable to enter app_dir"
       return 1
