@@ -296,7 +296,7 @@ steamtricks_data_dir()
   fi
 
   # automatically use development copy if running out of git tree
-  if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
+  if [ -d "$STEAMTRICKS_DIR/../.git" ] && [ -d "$STEAMTRICKS_DIR/../data" ] ; then
     STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DIR/../data"
   fi
 }
