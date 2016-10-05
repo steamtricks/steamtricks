@@ -5,6 +5,7 @@
 #
 
 # build-time constants
+STEAMTRICKS_VERSION="development"
 STEAMTRICKS_SCRIPT="$(cd "${0%/*}" && echo "$PWD")/${0##*/}"
 STEAMTRICKS_DIR="$(dirname "$STEAMTRICKS_SCRIPT")"
 STEAMTRICKS_DATA_DIR=/usr/share/steamtricks
@@ -341,6 +342,7 @@ _EOF_
 steamtricks_handle_option()
 {
   case "$1" in
+    --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     -f|--force) rm  -f -- "$PID_FILE" ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
