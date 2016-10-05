@@ -12,7 +12,7 @@ PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
 STEAM_LIB_PREFIX=/usr/lib/steam
-STEAM_OPENSSL_REPLACE=0
+STEAM_OPENSSL_REPLACE=1
 STEAM_DIR=~/.local/share/Steam
 STEAM_RUNTIME=$STEAM_DIR/ubuntu12_32/steam-runtime
 
@@ -262,7 +262,7 @@ steam_lib_replace()
   local replacement="$STEAM_LIB_PREFIX/$1"
   local original="$2"
 
-  if [ ! -L "$original" ] ; then
+  if [ ! -L "$original" ] && [ -f "$replacement" ] ; then
     rm "$original"
     ln -s "$replacement" "$original"
     echo "-> replace $original with $replacement"
