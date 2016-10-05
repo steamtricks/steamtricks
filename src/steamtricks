@@ -129,9 +129,9 @@ steamtricks_fix_apply()
       return 1
     fi
 
-    if [ -f "$data_dir/pre" ] ; then
-      echo "executing $data_dir/pre"
-      . "$data_dir/pre"
+    streamtricks_fix_script "$data_dir/pre"
+    if [ $? -eq 1 ] ; then
+      failed=1
     fi
 
     if [ -f "$data_dir/remove" ] ; then
@@ -157,9 +157,9 @@ steamtricks_fix_apply()
       fi
     done
 
-    if [ -f "$data_dir/post" ] ; then
-      echo "executing $data_dir/post"
-      . "$data_dir/post"
+    streamtricks_fix_script "$data_dir/post"
+    if [ $? -eq 1 ] ; then
+      failed=1
     fi
 
     # prints directory to which it changes
@@ -179,6 +179,20 @@ steamtricks_fix_apply()
   local message="app: $app_name, result: $status, removed: $removed, applied: $applied"
   echo "$message"
   notify FIX_APPLY "$message"
+}
+
+streamtricks_fix_script()
+{
+  local script="$1"
+  if [ -f "$script" ] ; then
+    echo "executing $script"
+    "$script"
+    if [ ! $? -eq 0 ] ; then
+      echo "-> script failed"
+      return 1
+    fi
+  fi
+  return 0
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
