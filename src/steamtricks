@@ -119,7 +119,8 @@ steamtricks_fix_apply()
   local removed=$(remove_incompatible_files "$app_dir")
   local applied=0
 
-  local data_dir="$STEAMTRICKS_DATA_DIR/$app_id"
+  local data_dir="$STEAMTRICKS_DATA_DIR/$app_id-*"
+  data_dir=$(echo $data_dir) # evaluate the glob
   if [ -d "$data_dir" ] ; then
     echo "found $data_dir..."
     cd "$app_dir"
