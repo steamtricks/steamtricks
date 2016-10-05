@@ -8,6 +8,7 @@
 STEAMTRICKS_SCRIPT="$(cd "${0%/*}" && echo "$PWD")/${0##*/}"
 STEAMTRICKS_DIR="$(dirname "$STEAMTRICKS_SCRIPT")"
 STEAMTRICKS_DATA_DIR=/usr/share/steamtricks
+STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DATA_DIR/data"
 PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
@@ -119,7 +120,7 @@ steamtricks_fix_apply()
   local removed=$(remove_incompatible_files "$app_dir")
   local applied=0
 
-  local data_dir="$STEAMTRICKS_DATA_DIR/$app_id-*"
+  local data_dir="$STEAMTRICKS_DATA_REPO_DIR/$app_id-*"
   data_dir=$(echo $data_dir) # evaluate the glob
   if [ -d "$data_dir" ] ; then
     echo "found $data_dir..."
@@ -289,7 +290,7 @@ steamtricks_data_dir()
 {
   # automatically use development copy if running out of git tree
   if [ -d "$STEAMTRICKS_DIR/../.git" ] ; then
-    STEAMTRICKS_DATA_DIR="$STEAMTRICKS_DIR/../data"
+    STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DIR/../data"
   fi
 }
 
