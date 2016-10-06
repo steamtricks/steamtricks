@@ -318,8 +318,6 @@ steam_content_log_watch()
     # for some reason this does not work when chained above
     line=$(echo "$line" | tr -d '\r')
     
-    echo $line
-    
     echo "$line" | grep "state changed : Update Required,$" > /dev/null
     if [ $? = 0 ] ; then
       local parts=($line)
