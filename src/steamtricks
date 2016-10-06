@@ -190,14 +190,19 @@ steamtricks_fix_apply()
       status=failure
     fi
 
+    local $deps_status
+    if [ $deps -eq 1 ] ; then
+      deps_status="installed"
+    else
+      deps_status="unchanged"
+    fi
+
     local message="<h3>$app_name</h3><ul> \
       <li>result: $status</li> \
       <li>removed: $removed</li> \
-      <li>applied: $applied</li>"
-    if [ $deps -eq 1 ] ; then
-      message+="<li>dependencies: installed</li>"
-    fi
-    message+="</ul>"
+      <li>applied: $applied</li> \
+      <li>dependencies: $deps_status</li> \
+      </ul>"
 
     notify FIX_APPLY "$message"
   else
