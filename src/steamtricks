@@ -10,10 +10,10 @@ STEAMTRICKS_SCRIPT="$(cd "${0%/*}" && echo "$PWD")/${0##*/}"
 STEAMTRICKS_DIR="$(dirname "$STEAMTRICKS_SCRIPT")"
 STEAMTRICKS_DATA_DIR=/usr/share/steamtricks
 STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DATA_DIR/data"
-PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
 CONFIG_CACHE_DIR="$CONFIG_DIR/cache"
+PID_FILE="$CONFIG_DIR/.steamtrickspid"
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=1
 STEAM_DIR=~/.local/share/Steam
@@ -27,10 +27,20 @@ C_NOTIFICATION_FIX_APPLY=1
 C_NOTIFICATION_FIX_APPLY_NONE=1
 C_NOTIFICATION_FIX_APPLY_PRE=1
 C_NOTIFICATION_FIX_FETCH=1
-C_STEAM_STARTUP_MAX=120
+C_STEAM_STARTUP_TIMEOUT_MAX_SECS=120
 
 _C_VERSION=20161006
 
+
+C_DEBUG=1
+
+
+debug_output()
+{
+  if test "$C_DEBUG" == 1; then
+   (>&2 echo "Debug: $1")
+  fi
+}
 
 notify()
 {
@@ -294,16 +304,19 @@ steam_content_log_watch()
   echo -n "waiting for steam to start..."
   local tries=0
   until pgrep -xo steam > /dev/null ; do
-    if [ $((tries++)) -eq $C_STEAM_STARTUP_MAX ] ; then
-     echo "failed after $C_STEAM_STARTUP_MAX seconds"
+    if [ $((tries++)) -eq $C_STEAM_STARTUP_TIMEOUT_MAX_SECS ] ; then
+     echo "failed after $C_STEAM_STARTUP_TIMEOUT_MAX_SECS seconds"
      exit 1
     fi
     sleep 1
   done
   echo "done"
-
-  tail --pid $(pgrep -xo steam) -fn0 "$STEAM_DIR/logs/content_log.txt" | \
-  while read line ; do
+  
+  local STEAM_PID="$(pgrep -xo steam)"
+  
+  #watch for steam closing whilst reading
+  tail --pid $$ -fn0 "$STEAM_DIR/logs/content_log.txt" | \
+  while [[ ( -d "/proc/$STEAM_PID" ) ]] && read line ; do
     # steam prints CRLF into log files (issue #4646)
     # for some reason this does not work when chained above
     line=$(echo "$line" | tr -d '\r')
@@ -400,11 +413,13 @@ steamtricks_config_print()
 
 steamtricks_usage()
 {
+    
   cat <<_EOF_
 Usage: $0 [options] command
 
 Options:
 -d, --daemon          Run in the background and output to log file
+-s, --stop            Stop the daemon
 -f, --force           Force launch by removing pid file
     --version         Print version string and exit
     --watch           Watch Steam logs for relevant activity
@@ -418,8 +433,9 @@ _EOF_
 steamtricks_handle_option()
 {
   case "$1" in
-    --daemon) STEAMTRICKS_DAEMON=1 ;;
-    -f|--force) rm  -f -- "$PID_FILE" ;;
+    -d|--daemon) STEAMTRICKS_DAEMON=1 ;;
+    -s|--stop) STEAMTRICKS_DAEMON_STOP=1;;
+    -f|--force) rm -f -- "$PID_FILE" ;;
     --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
@@ -429,36 +445,67 @@ steamtricks_handle_option()
   return 0
 }
 
+
 while steamtricks_handle_option $1 ; do
   shift
 done
 
+if test "$STEAMTRICKS_WATCH" == 1 ; then
+  #redirect stdout as watch daemon
+  log="$CONFIG_DIR/steamtricks.log"
+  exec 1<&-
+  exec 1<>$log
+fi
+
 # pid file to detect already running
 if [ -f "$PID_FILE" ] ; then
-  echo "steamtricks is already running"
-  exit 1
+  #running but want to stop
+  if test "$STEAMTRICKS_DAEMON_STOP" == 1 ; then
+    echo "Stopping steamtricks..."
+    pkill -F "$PID_FILE"
+    exit 0
+  fi
+  
+  #ignore if running watch thread
+  if test "$STEAMTRICKS_WATCH" == 0 ; then
+    echo "steamtricks is already running"
+    exit 1
+  fi
+  
+else
+  if test "$STEAMTRICKS_DAEMON_STOP" == 1 ; then
+   echo "steamtricks is not currently running"
+   exit 1
+  fi
 fi
-trap "rm -f -- '$PID_FILE'" EXIT
-echo $$ > "$PID_FILE"
 
 # initial boot
 steamtricks_config
+
+#check if daemon requested
 if test "$STEAMTRICKS_DAEMON" == 1 ; then
   log="$CONFIG_DIR/steamtricks.log"
   if [ -f "$log" ] ; then
     mv "$log" "$log.1"
   fi
-  ($0 --watch &> "$log" &)
-  echo "steamtricks launched"
+  
+  #launch watch instance in background
+  $0 --watch &
+  echo $! > "$PID_FILE"
+  echo "steamtricks daemon launched"
+ 
   exit
-fi
-remove_incompatible_files_runtime
-if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
-  steam_openssl_replace
+  
+else
+  remove_incompatible_files_runtime
+  if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
+    steam_openssl_replace
+  fi
 fi
 
 # watch phase
 steamtricks_data_dir
 if test "$STEAMTRICKS_WATCH" == 1 ; then
+  trap "rm -f -- '$PID_FILE'" EXIT
   steam_content_log_watch
 fi
