@@ -23,10 +23,11 @@ C_DATA_DIR=
 C_NOTIFICATION=1
 C_NOTIFICATION_CLEAN=1
 C_NOTIFICATION_FIX_APPLY=1
+C_NOTIFICATION_FIX_APPLY_PRE=1
 C_NOTIFICATION_FIX_FETCH=1
 C_STEAM_STARTUP_MAX=120
 
-_C_VERSION=20161005
+_C_VERSION=20161006
 
 
 notify()
@@ -118,6 +119,8 @@ steamtricks_fix_apply()
   eval $(keyvalue_parse "$manifest")
   local app_name="$AppState_name"
   local app_dir="$(dirname "$manifest")/common/$AppState_installdir"
+
+  notify FIX_APPLY_PRE "Handling <b>$app_name</b> update"
 
   local failed=0
   local removed=$(remove_incompatible_files "$app_dir")
