@@ -144,8 +144,8 @@ steamtricks_fix_apply()
       failed=1
     fi
 
-    if [ -f "$data_dir/remove" ] ; then
-      ((removed+=$(rm -v $(cat "$data_dir/remove") | tee /dev/stderr | wc -l)))
+    if [ -f "$data_dir/00-remove" ] ; then
+      ((removed+=$(rm -v $(cat "$data_dir/00-remove") | tee /dev/stderr | wc -l)))
       failed=$?
     fi
 
