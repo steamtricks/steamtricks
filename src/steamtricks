@@ -90,11 +90,11 @@ steam_library_directories()
 
 steam_app_manifest()
 {
-  local appid=$1
+  local app_id=$1
   local manifest
   local IFS=$'\n' # allow for spaces in directories
   for dir in $(steam_library_directories) ; do
-    manifest="$dir/appmanifest_$appid.acf"
+    manifest="$dir/appmanifest_$app_id.acf"
     if [ -f "$manifest" ] ; then
       echo "$manifest"
       break
