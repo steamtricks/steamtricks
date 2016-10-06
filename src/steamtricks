@@ -31,6 +31,7 @@ _C_VERSION=20161005
 
 notify()
 {
+  echo "notify: $2"
   eval local toggle=\$$"C_NOTIFICATION_$1"
   if test "$C_NOTIFICATION" == 1 && test "$toggle" == 1 ; then
     notify-send "steamtricks" "$2" --icon=steam
@@ -179,9 +180,7 @@ steamtricks_fix_apply()
     status=failure
   fi
 
-  local message="app: $app_name, result: $status, removed: $removed, applied: $applied"
-  echo "$message"
-  notify FIX_APPLY "$message"
+  notify FIX_APPLY "app: $app_name, result: $status, removed: $removed, applied: $applied"
 }
 
 streamtricks_fix_script()
