@@ -13,6 +13,7 @@ STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DATA_DIR/data"
 PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
+CONFIG_CACHE_DIR="$CONFIG_DIR/cache"
 STEAM_LIB_PREFIX=/usr/lib/steam
 STEAM_OPENSSL_REPLACE=1
 STEAM_DIR=~/.local/share/Steam
@@ -126,15 +127,16 @@ steamtricks_fix_apply()
   local removed=$(remove_incompatible_files "$app_dir")
   local applied=0
 
+  cd "$app_dir"
+  if [ ! $? -eq 0 ] ; then
+    echo "unable to enter app_dir"
+    return 1
+  fi
+
   local data_dir="$STEAMTRICKS_DATA_REPO_DIR/$app_id-*"
   data_dir=$(echo $data_dir) # evaluate the glob
   if [ -d "$data_dir" ] ; then
-    echo "found $data_dir..."
-    cd "$app_dir"
-    if [ ! $? -eq 0 ] ; then
-      echo "unable to enter app_dir"
-      return 1
-    fi
+    echo "fix available"
 
     streamtricks_fix_script "$data_dir/00-pre"
     if [ $? -eq 1 ] ; then
@@ -168,22 +170,39 @@ steamtricks_fix_apply()
     if [ $? -eq 1 ] ; then
       failed=1
     fi
-
-    # prints directory to which it changes
-    cd - > /dev/null
-  elif [ $removed -eq 0 ] ; then
-    echo "no changes made"
-    return 0
   fi
 
-  local status
-  if [ $failed -eq 0 ] ; then
-    status=success
+  # seems to help to let steam settle
+  sleep 1
+
+  # check deps last since it may take a while
+  steamtricks_fix_deps "$app_id"
+  local deps=$?
+
+  # prints directory to which it changes
+  cd - > /dev/null
+
+  if [ $removed -gt 0 ] || [ $applied -gt 0 ] || [ $deps -eq 1 ] ; then
+    local status
+    if [ $failed -eq 0 ] ; then
+      status=success
+    else
+      status=failure
+    fi
+
+    local message="<h3>$app_name</h3><ul> \
+      <li>result: $status</li> \
+      <li>removed: $removed</li> \
+      <li>applied: $applied</li>"
+    if [ $deps -eq 1 ] ; then
+      message+="<li>dependencies: installed</li>"
+    fi
+    message+="</ul>"
+
+    notify FIX_APPLY "$message"
   else
-    status=failure
+    echo "no changes made"
   fi
-
-  notify FIX_APPLY "app: $app_name, result: $status, removed: $removed, applied: $applied"
 }
 
 streamtricks_fix_script()
@@ -198,6 +217,43 @@ streamtricks_fix_script()
     fi
   fi
   return 0
+}
+
+# openSUSE specific, once other distro provide equivilent this can be abstracted
+steamtricks_fix_deps()
+{
+  echo "checking dependencies..."
+
+  # `find -maxdepth 1` is nice, but games like dota have nothing in their root
+  # directory. However this makes the check much more expensive. Until it is
+  # clear this is common enough to warrant the cost, leave with maxdepth.
+  # Alternatively, include in -data repo or package builds would remove cost.
+  local app_id=$1
+  local prefix=/tmp/steamtricks
+  find . -type f -maxdepth 1 > $prefix-files
+  local provides=$(/usr/lib/rpm/find-provides < $prefix-files | sort | tee $prefix-provides | wc -l)
+  local requires=$(/usr/lib/rpm/find-requires < $prefix-files | sort | tee $prefix-requires | wc -l)
+  local needs=$(comm -23 $prefix-requires $prefix-provides | tee $prefix-needs | wc -l)
+  local sha1=$(sha1sum < $prefix-needs) # use < to avoid filename in output
+  echo "-> provides: $provides, requires: $requires, needs: $needs"
+
+  # check if previous deps differ from current and only prompt install if changed
+  local cache="$CONFIG_CACHE_DIR/$app_id"
+  local update=1
+  if [ -f "$cache" ] && [[ "$sha1" == "$(cat "$cache")" ]] ; then
+    update=0
+  fi
+
+  if [ $update -eq 1 ] ; then
+    xdg-terminal '/usr/bin/env bash -c "sudo zypper in -C $(cat '$prefix-needs') && sleep 5"'
+    echo "$sha1" > "$cache"
+    return 1
+  else
+    echo "-> nothing new"
+    return 0
+  fi
+
+  rm $prefix-*
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
@@ -307,6 +363,10 @@ steamtricks_config()
 {
   if [ ! -d "$CONFIG_DIR" ] ; then
     mkdir -p "$CONFIG_DIR"
+  fi
+
+  if [ ! -d "$CONFIG_CACHE_DIR" ] ; then
+    mkdir -p "$CONFIG_CACHE_DIR"
   fi
 
   if [ -e "$CONFIG_RC" ] ; then
