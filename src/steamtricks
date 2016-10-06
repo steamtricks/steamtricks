@@ -404,6 +404,7 @@ steamtricks_usage()
 Usage: $0 [options] command
 
 Options:
+-d, --daemon          Run in the background and output to log file
 -f, --force           Force launch by removing pid file
     --watch           Watch Steam logs for relevant activity
 -h, --help            Display this message and exit
@@ -416,6 +417,7 @@ _EOF_
 steamtricks_handle_option()
 {
   case "$1" in
+    --daemon) STEAMTRICKS_DAEMON=1 ;;
     --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     -f|--force) rm  -f -- "$PID_FILE" ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
@@ -440,6 +442,15 @@ echo $$ > "$PID_FILE"
 
 # initial boot
 steamtricks_config
+if test "$STEAMTRICKS_DAEMON" == 1 ; then
+  log="$CONFIG_DIR/steamtricks.log"
+  if [ -f "$log" ] ; then
+    mv "$log" "$log.1"
+  fi
+  ($0 --watch &> "$log" &)
+  echo "steamtricks launched"
+  exit
+fi
 remove_incompatible_files_runtime
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace
