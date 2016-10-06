@@ -406,6 +406,7 @@ Usage: $0 [options] command
 Options:
 -d, --daemon          Run in the background and output to log file
 -f, --force           Force launch by removing pid file
+    --version         Print version string and exit
     --watch           Watch Steam logs for relevant activity
 -h, --help            Display this message and exit
 
@@ -418,8 +419,8 @@ steamtricks_handle_option()
 {
   case "$1" in
     --daemon) STEAMTRICKS_DAEMON=1 ;;
-    --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     -f|--force) rm  -f -- "$PID_FILE" ;;
+    --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
     -*) echo "unknown option $1" ; exit 1 ;;
