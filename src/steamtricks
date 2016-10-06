@@ -432,7 +432,7 @@ done
 
 # pid file to detect already running
 if [ -f "$PID_FILE" ] ; then
-  echo "already running"
+  echo "steamtricks is already running"
   exit 1
 fi
 trap "rm -f -- '$PID_FILE'" EXIT
