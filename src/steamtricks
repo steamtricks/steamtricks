@@ -139,35 +139,7 @@ steamtricks_fix_apply()
   if [ -d "$data_dir" ] ; then
     echo "fix available"
 
-    streamtricks_fix_script "$data_dir/00-pre"
-    if [ $? -eq 1 ] ; then
-      failed=1
-    fi
-
-    if [ -f "$data_dir/00-remove" ] ; then
-      ((removed+=$(rm -v $(cat "$data_dir/00-remove") | tee /dev/stderr | wc -l)))
-      failed=$?
-    fi
-
-    # could pipe the list of patches, but loose access to variable state
-    local IFS=$'\n' # allow for spaces in directories
-    for patch in $(find "$data_dir" -type f -name "*.patch") ; do
-      echo "patch $patch..."
-      patch -p1 --dry-run --unified --forward -i "$patch"
-      if [ $? -eq 0 ] ; then
-        patch -p1 --unified --forward -i "$patch"
-      else
-        patch -t -p1 --dry-run --unified --reverse -i "$patch"
-      fi
-
-      if [ $? -eq 0 ] ; then
-        ((applied++))
-      else
-        failed=1
-      fi
-    done
-
-    streamtricks_fix_script "$data_dir/99-post"
+    steamtricks_fix_apply_data "$data_dir"
     if [ $? -eq 1 ] ; then
       failed=1
     fi
@@ -209,6 +181,54 @@ steamtricks_fix_apply()
   else
     notify FIX_APPLY_NONE "No changes needed by <b>$app_name</b>"
   fi
+}
+
+# apply fixes in the following order
+# - 00-pre: executable script
+# - 00-remove: list of files or glob patterns to remove
+# - *.patch: -p1 formated patches to apply relative to app or steamruntime
+# - 99-post: executable script
+steamtricks_fix_apply_data()
+{
+  local data_dir="$1"
+  local failed=0
+
+  echo "applying $data_dir..."
+
+  streamtricks_fix_script "$data_dir/00-pre"
+  if [ $? -eq 1 ] ; then
+    failed=1
+  fi
+
+  if [ -f "$data_dir/00-remove" ] ; then
+    ((removed+=$(rm -v $(cat "$data_dir/00-remove") | tee /dev/stderr | wc -l)))
+    failed=$?
+  fi
+
+  # could pipe the list of patches, but lose access to variable state
+  local IFS=$'\n' # allow for spaces in directories
+  for patch in $(find "$data_dir" -type f -name "*.patch") ; do
+    echo "patch $patch..."
+    patch -p1 --dry-run --unified --forward -i "$patch"
+    if [ $? -eq 0 ] ; then
+      patch -p1 --unified --forward -i "$patch"
+    else
+      patch -t -p1 --dry-run --unified --reverse -i "$patch"
+    fi
+
+    if [ $? -eq 0 ] ; then
+      ((applied++))
+    else
+      failed=1
+    fi
+  done
+
+  streamtricks_fix_script "$data_dir/99-post"
+  if [ $? -eq 1 ] ; then
+    failed=1
+  fi
+
+  return $failed
 }
 
 streamtricks_fix_script()
