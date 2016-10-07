@@ -302,23 +302,23 @@ steam_content_log_watch()
   done
   echo "done"
 
+  local line
+  local parts
   tail --pid $(pgrep -xo steam) -fn0 "$STEAM_DIR/logs/content_log.txt" | \
   while read line ; do
     # steam prints CRLF into log files (issue #4646)
     # for some reason this does not work when chained above
     line=$(echo "$line" | tr -d '\r')
+    parts=($line)
 
-    echo "$line" | grep "state changed : Update Required,$" > /dev/null
-    if [ $? = 0 ] ; then
-      local parts=($line)
-      steamtricks_fix_fetch ${parts[3]}
-    fi
 
-    echo "$line" | grep "state changed : Fully Installed,Update Running,$" > /dev/null
-    if [ $? = 0 ] ; then
-      local parts=($line)
-      steamtricks_fix_apply ${parts[3]}
-    fi
+    # handle app state change events
+    case $line in
+      *"state changed : Update Required,")
+        steamtricks_fix_fetch ${parts[3]} ;;
+      *"state changed : Fully Installed,Update Running,")
+        steamtricks_fix_apply ${parts[3]} ;;
+    esac
   done
 
   echo "steam quit, exit"
