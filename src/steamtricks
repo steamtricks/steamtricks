@@ -121,6 +121,7 @@ steamtricks_fix_apply()
   eval $(keyvalue_parse "$manifest")
   local app_name="$AppState_name"
   local app_dir="$(dirname "$manifest")/common/$AppState_installdir"
+  local build_id="$AppState_buildid"
 
   notify FIX_APPLY_PRE "Handling <b>$app_name</b> update"
 
@@ -134,6 +135,8 @@ steamtricks_fix_apply()
     return 1
   fi
 
+  # apply root directory
+  # apply revision directory
   local data_dir="$STEAMTRICKS_DATA_REPO_DIR/$app_id-*"
   data_dir=$(echo $data_dir) # evaluate the glob
   if [ -d "$data_dir" ] ; then
@@ -142,6 +145,30 @@ steamtricks_fix_apply()
     steamtricks_fix_apply_data "$data_dir"
     if [ $? -eq 1 ] ; then
       failed=1
+    fi
+
+    # ensure build_id is a positive integer
+    if [ -z "${build_id##*[!0-9]*}" ] ; then
+      echo "invalid build ID ($build_id), ignoring revision specific fixes"
+    else
+      echo "valid build ID ($build_id), checking for revision specific fixes"
+      # look through revision directories and apply relevant.
+      # directories will be sorted from smallest to largest so apply the last
+      # one that matches criteria.
+      local last
+      for directory in $(cd "$data_dir" && ls -d */ | sed "s|/||g") ; do
+        # check that directory is a positive integer is less than build_id
+        if [ ! -z "${directory##*[!0-9]*}" ] && [ $directory -le $build_id ] ; then
+          last="$directory"
+        fi
+      done
+
+      if [ ! -z "$last" ] ; then
+        steamtricks_fix_apply_data "$data_dir/$last"
+        if [ $? -eq 1 ] ; then
+          failed=1
+        fi
+      fi
     fi
   fi
 
