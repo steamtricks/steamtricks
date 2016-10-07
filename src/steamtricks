@@ -297,16 +297,18 @@ steamtricks_fix_deps()
     update=0
   fi
 
+  local return
   if [ $update -eq 1 ] ; then
     xdg-terminal '/usr/bin/env bash -c "sudo zypper in -C $(cat '$prefix-needs') && sleep 5"'
     echo "$sha1" > "$cache"
-    return 1
+    return=1
   else
     echo "-> nothing new"
-    return 0
+    return=0
   fi
 
   rm $prefix-*
+  return $return
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
