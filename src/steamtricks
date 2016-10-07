@@ -195,7 +195,7 @@ steamtricks_fix_apply_data()
 
   echo "applying $data_dir..."
 
-  streamtricks_fix_script "$data_dir/00-pre"
+  steamtricks_fix_script "$data_dir/00-pre"
   if [ $? -eq 1 ] ; then
     failed=1
   fi
@@ -223,7 +223,7 @@ steamtricks_fix_apply_data()
     fi
   done
 
-  streamtricks_fix_script "$data_dir/99-post"
+  steamtricks_fix_script "$data_dir/99-post"
   if [ $? -eq 1 ] ; then
     failed=1
   fi
@@ -231,7 +231,7 @@ steamtricks_fix_apply_data()
   return $failed
 }
 
-streamtricks_fix_script()
+steamtricks_fix_script()
 {
   local script="$1"
   if [ -f "$script" ] ; then
