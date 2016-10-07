@@ -190,7 +190,7 @@ steamtricks_fix_apply()
       status=failure
     fi
 
-    local $deps_status
+    local deps_status
     if [ $deps -eq 1 ] ; then
       deps_status="installed"
     else
