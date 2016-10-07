@@ -304,6 +304,7 @@ steam_content_log_watch()
 
   local line
   local parts
+  local validating=0
   tail --pid $(pgrep -xo steam) -fn0 "$STEAM_DIR/logs/content_log.txt" | \
   while read line ; do
     # steam prints CRLF into log files (issue #4646)
@@ -311,6 +312,22 @@ steam_content_log_watch()
     line=$(echo "$line" | tr -d '\r')
     parts=($line)
 
+    # detect app validation, steam only allows one app to be validated at a time
+    # so a single boolean toggle is enough to track it
+    case $line in
+      *"Start validating appID"*)
+        echo "validate app ${parts[5]} start, ignore state changes"
+        validating=1 ;;
+      *"File validation finished"*)
+        echo "validate app stop, process state changes"
+        validating=0 ;;
+      *) ;;
+    esac
+
+    # ignore any misleading events during validation
+    if [ $validating -eq 1 ] ; then
+      continue
+    fi
 
     # handle app state change events
     case $line in
