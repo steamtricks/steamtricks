@@ -12,4 +12,4 @@ all:
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin
-	$(INSTALL_PROGRAM) src/steamtricks $(DESTDIR)$(PREFIX)/bin/steamtricks
+	$(INSTALL_PROGRAM) src/steamtricks $(DESTDIR)$(PREFIX)/bin/
