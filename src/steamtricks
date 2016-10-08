@@ -228,7 +228,7 @@ steamtricks_fix_apply_data()
 
   if [ -f "$data_dir/00-remove" ] ; then
     ((removed+=$(rm -v $(cat "$data_dir/00-remove") | tee /dev/shm/steamtricks | wc -l)))
-    cat /dev/shm/steamtricks # ugly, but cannot reference /dev/stderr in systemd
+    1>&2 cat /dev/shm/steamtricks # ugly, but cannot reference /dev/stderr in systemd
     failed=$?
   fi
 
@@ -325,7 +325,7 @@ remove_incompatible_files()
   for dir in $*; do
     echo "-> checking $dir" >&2
     ((count+=$(find "$dir" -type f -name "libstdc*" -print -delete | tee /dev/shm/steamtricks | wc -l)))
-    cat /dev/shm/steamtricks # ugly, but cannot reference /dev/stderr in systemd
+    1>&2 cat /dev/shm/steamtricks # ugly, but cannot reference /dev/stderr in systemd
   done
   echo $count
 }
