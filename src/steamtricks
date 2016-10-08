@@ -10,7 +10,6 @@ STEAMTRICKS_SCRIPT="$(cd "${0%/*}" && echo "$PWD")/${0##*/}"
 STEAMTRICKS_DIR="$(dirname "$STEAMTRICKS_SCRIPT")"
 STEAMTRICKS_DATA_DIR=/usr/share/steamtricks
 STEAMTRICKS_DATA_REPO_DIR="$STEAMTRICKS_DATA_DIR/data"
-PID_FILE=~/.steamtrickspid
 CONFIG_DIR=~/.local/share/steamtricks
 CONFIG_RC="$CONFIG_DIR/steamtricksrc"
 CONFIG_CACHE_DIR="$CONFIG_DIR/cache"
@@ -472,8 +471,6 @@ steamtricks_usage()
 Usage: $0 [options] command
 
 Options:
--d, --daemon          Run in the background and output to log file
--f, --force           Force launch by removing pid file
     --version         Print version string and exit
     --watch           Watch Steam logs for relevant activity
 -h, --help            Display this message and exit
@@ -486,8 +483,6 @@ _EOF_
 steamtricks_handle_option()
 {
   case "$1" in
-    --daemon) STEAMTRICKS_DAEMON=1 ;;
-    -f|--force) rm  -f -- "$PID_FILE" ;;
     --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
@@ -501,25 +496,8 @@ while steamtricks_handle_option $1 ; do
   shift
 done
 
-# pid file to detect already running
-if [ -f "$PID_FILE" ] ; then
-  echo "steamtricks is already running"
-  exit 1
-fi
-trap "rm -f -- '$PID_FILE'" EXIT
-echo $$ > "$PID_FILE"
-
 # initial boot
 steamtricks_config
-if test "$STEAMTRICKS_DAEMON" == 1 ; then
-  log="$CONFIG_DIR/steamtricks.log"
-  if [ -f "$log" ] ; then
-    mv "$log" "$log.1"
-  fi
-  ($0 --watch &> "$log" &)
-  echo "steamtricks launched"
-  exit
-fi
 remove_incompatible_files_runtime
 if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
   steam_openssl_replace

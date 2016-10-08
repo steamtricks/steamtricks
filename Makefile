@@ -13,3 +13,6 @@ all:
 install:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL_PROGRAM) src/steamtricks $(DESTDIR)$(PREFIX)/bin/
+
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/lib/systemd/user/
+	$(INSTALL) dist/steamtricksd.service $(DESTDIR)$(PREFIX)/lib/systemd/user/

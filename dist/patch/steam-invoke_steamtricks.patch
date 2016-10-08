@@ -14,7 +14,7 @@ index 1b71982..4bfd739 100644
 @@ -1,4 +1,8 @@
  #!/usr/bin/env bash
 +if ! test "$NO_STEAMTRICKS" == 1 && [ -x "$(which steamtricks)" ] ; then
-+  steamtricks --daemon
++  systemctl --user start steamtricksd
 +fi
 +
  #

@@ -1,0 +1,15 @@
+# http://www.freedesktop.org/software/systemd/man/systemd.service.html
+#
+# For development:
+# - copy or link this file into ~/.local/share/systemd/user/
+# - change the ExecStart to point to the development version
+# - run `systemctl --user daemon-reload` to refresh systemd
+# - run `systemctl --user restart steamtricksd` and so on
+#
+
+[Unit]
+Description=steamtricks daemon
+
+[Service]
+ExecStart=/usr/bin/steamtricks --watch
+Restart=on-failure
