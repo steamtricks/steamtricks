@@ -1,19 +1,22 @@
-From 55ddf909df868c24dee22187c61f5f60082d319d Mon Sep 17 00:00:00 2001
+From 955afa50b1dd1a899b3d410c9b44d9b56c2a3bf5 Mon Sep 17 00:00:00 2001
 From: boombatower <jimmy@boombatower.com>
-Date: Sun, 2 Oct 2016 03:03:56 -0500
+Date: Sat, 8 Oct 2016 23:19:22 -0500
 Subject: [PATCH] Invoke steamtricks if available.
 
 ---
- steam | 4 ++++
- 1 file changed, 4 insertions(+)
+ steam | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/steam b/steam
-index 1b71982..4bfd739 100644
+index 1b71982..3cd8821 100755
 --- a/steam
 +++ b/steam
-@@ -1,4 +1,8 @@
+@@ -1,4 +1,11 @@
  #!/usr/bin/env bash
 +if ! test "$NO_STEAMTRICKS" == 1 && [ -x "$(which steamtricks)" ] ; then
++  # does not seem to be a better place to daemon-reload since install time runs
++  # as root and does not have user context available
++  systemctl --user daemon-reload
 +  systemctl --user start steamtricksd
 +fi
 +
