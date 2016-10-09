@@ -177,7 +177,7 @@ steamtricks_fix_apply()
   sleep 1
 
   # check deps last since it may take a while
-  steamtricks_fix_deps "$app_id"
+  steamtricks_fix_deps "$app_id" "$app_name"
   local deps=$?
 
   # prints directory to which it changes
@@ -287,7 +287,8 @@ steamtricks_fix_deps()
   # directory. However this makes the check much more expensive. Until it is
   # clear this is common enough to warrant the cost, leave with maxdepth.
   # Alternatively, include in -data repo or package builds would remove cost.
-  local app_id=$1
+  local app_id="$1"
+  local app_name="$2"
   local prefix=/tmp/steamtricks
   find . -type f -maxdepth 1 > $prefix-files
   local provides=$(/usr/lib/rpm/find-provides < $prefix-files | sort | tee $prefix-provides | wc -l)
@@ -310,7 +311,9 @@ steamtricks_fix_deps()
 
   local return
   if [ $update -eq 1 ] ; then
-    xdg-terminal '/usr/bin/env bash -c "sudo zypper in -C $(cat '$prefix-needs'); sleep 5"'
+    xdg-terminal '/usr/bin/env bash -c " \
+      echo \"Attempting to install dependencies for '"$app_name"'.\"; \
+      sudo zypper in -C $(cat '$prefix-needs'); sleep 5"'
     echo "$sha1" > "$cache"
     return=1
   else
