@@ -151,19 +151,21 @@ steamtricks_fix_apply()
       echo "invalid build ID ($build_id), ignoring revision specific fixes"
     else
       echo "valid build ID ($build_id), checking for revision specific fixes"
-      # look through revision directories and apply relevant.
-      # directories will be sorted from smallest to largest so apply the last
-      # one that matches criteria.
-      local last
-      for directory in $(cd "$data_dir" && ls -d */ | sed "s|/||g") ; do
+      # look through revision directories and apply first applicable directory.
+      # directories will be sorted from largest to smallest so apply the first
+      # one that matches criteria. `cd` ensures returned paths are not absolute
+      # so after stripping ./ the bare directory name is available.
+      local first
+      for directory in $(cd "$data_dir" && find . -mindepth 1 -maxdepth 1 -type d | sed "s|\./||g") ; do
         # check that directory is a positive integer is less than build_id
         if [ ! -z "${directory##*[!0-9]*}" ] && [ $directory -le $build_id ] ; then
-          last="$directory"
+          first="$directory"
+          break
         fi
       done
 
-      if [ ! -z "$last" ] ; then
-        steamtricks_fix_apply_data "$data_dir/$last"
+      if [ ! -z "$first" ] ; then
+        steamtricks_fix_apply_data "$data_dir/$first"
         if [ $? -eq 1 ] ; then
           failed=1
         fi
