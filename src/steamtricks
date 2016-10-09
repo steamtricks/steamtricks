@@ -278,6 +278,10 @@ steamtricks_fix_script()
 steamtricks_fix_deps()
 {
   echo "checking dependencies..."
+  if ! which zypper > /dev/null ; then
+    echo "-> zypper unavailable, skipping"
+    return 0
+  fi
 
   # `find -maxdepth 1` is nice, but games like dota have nothing in their root
   # directory. However this makes the check much more expensive. Until it is
