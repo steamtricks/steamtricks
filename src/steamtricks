@@ -296,7 +296,12 @@ steamtricks_fix_deps()
   local sha1=$(sha1sum < $prefix-needs) # use < to avoid filename in output
   echo "-> provides: $provides, requires: $requires, needs: $needs"
 
-  # check if previous deps differ from current and only prompt install if changed
+  # check if previous deps differ from current and prompt to install if changed.
+  # It would be preferable to be able to check if any dependencies are available
+  # and not installed, but `zypper search --provides` does not differentiate
+  # between 32bit and 64bit packages so it would be non-trivial. Alternatively
+  # updating `zypper in --dry-run` to work without sudo would allow a check
+  # before prompting. In the meantime the best that can be done is cache.
   local cache="$CONFIG_CACHE_DIR/$app_id"
   local update=1
   if [ -f "$cache" ] && [[ "$sha1" == "$(cat "$cache")" ]] ; then
