@@ -301,7 +301,7 @@ steamtricks_fix_deps()
 
   local return
   if [ $update -eq 1 ] ; then
-    xdg-terminal '/usr/bin/env bash -c "sudo zypper in -C $(cat '$prefix-needs') && sleep 5"'
+    xdg-terminal '/usr/bin/env bash -c "sudo zypper in -C $(cat '$prefix-needs'); sleep 5"'
     echo "$sha1" > "$cache"
     return=1
   else
