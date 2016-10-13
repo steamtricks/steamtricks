@@ -324,7 +324,7 @@ steamtricks_fix_deps()
   if [ "$sha1_needs" != "$cache_needs" ] ; then
     xdg-terminal '/usr/bin/env bash -c " \
       echo \"Attempting to install dependencies for '"$app_name"'.\"; \
-      sudo zypper in -C $(cat '$prefix-needs'); sleep 5"'
+      sudo zypper in -C $(cat '$prefix-needs') || sleep 5"'
     return=1
   else
     echo "-> nothing new"
