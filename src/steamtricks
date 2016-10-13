@@ -25,10 +25,11 @@ C_NOTIFICATION_CLEAN=1
 C_NOTIFICATION_FIX_APPLY=1
 C_NOTIFICATION_FIX_APPLY_NONE=1
 C_NOTIFICATION_FIX_APPLY_PRE=0
+C_NOTIFICATION_FIX_DEPS=1
 C_NOTIFICATION_FIX_FETCH=0
 C_STEAM_STARTUP_MAX=120
 
-_C_VERSION=20161008
+_C_VERSION=20161013
 
 
 notify()
@@ -307,6 +308,7 @@ steamtricks_fix_deps()
     return 0
   fi
 
+  notify FIX_DEPS "Checking dependencies for <b>$app_name</b>, which may take a bit"
   echo "evaluating binaries..."
   local provides=$(/usr/lib/rpm/find-provides < $prefix-files | sort | tee $prefix-provides | wc -l)
   local requires=$(/usr/lib/rpm/find-requires < $prefix-files | sort | tee $prefix-requires | wc -l)
