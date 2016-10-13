@@ -290,12 +290,28 @@ steamtricks_fix_deps()
   local app_id="$1"
   local app_name="$2"
   local prefix=/tmp/steamtricks
+  local cache="$CONFIG_CACHE_DIR/$app_id"
+  local cache_files cache_needs
+  if [ -f "$cache" ] ; then
+    read cache_files cache_needs <<< $(cat "$cache")
+    echo "cache loaded"
+    echo "-> files: $cache_files"
+    echo "-> needs: $cache_needs"
+  fi
+
   # limit dep check to .so files or files with no . at all (presumed executable)
   find . -type f -regextype posix-extended -regex ".*/((.+(\.so(\.[0-9]+)?))|([^.]+))$" > $prefix-files
+  local sha1_files=$(sha1 $prefix-files)
+  if [ "$sha1_files" == "$cache_files" ] ; then
+    echo "file list identical"
+    return 0
+  fi
+
+  echo "evaluating binaries..."
   local provides=$(/usr/lib/rpm/find-provides < $prefix-files | sort | tee $prefix-provides | wc -l)
   local requires=$(/usr/lib/rpm/find-requires < $prefix-files | sort | tee $prefix-requires | wc -l)
   local needs=$(comm -23 $prefix-requires $prefix-provides | tee $prefix-needs | wc -l)
-  local sha1=$(sha1sum < $prefix-needs) # use < to avoid filename in output
+  local sha1_needs=$(sha1 $prefix-needs)
   echo "-> provides: $provides, requires: $requires, needs: $needs"
 
   # check if previous deps differ from current and prompt to install if changed.
@@ -304,26 +320,28 @@ steamtricks_fix_deps()
   # between 32bit and 64bit packages so it would be non-trivial. Alternatively
   # updating `zypper in --dry-run` to work without sudo would allow a check
   # before prompting. In the meantime the best that can be done is cache.
-  local cache="$CONFIG_CACHE_DIR/$app_id"
-  local update=1
-  if [ -f "$cache" ] && [[ "$sha1" == "$(cat "$cache")" ]] ; then
-    update=0
-  fi
-
   local return
-  if [ $update -eq 1 ] ; then
+  if [ "$sha1_needs" != "$cache_needs" ] ; then
     xdg-terminal '/usr/bin/env bash -c " \
       echo \"Attempting to install dependencies for '"$app_name"'.\"; \
       sudo zypper in -C $(cat '$prefix-needs'); sleep 5"'
-    echo "$sha1" > "$cache"
     return=1
   else
     echo "-> nothing new"
     return=0
   fi
 
+  # at minimum sha1_files changed
+  echo "$sha1_files"$'\n'"$sha1_needs" | tee "$cache"
+
   rm $prefix-*
   return $return
+}
+
+sha1()
+{
+  # use < to avoid filename in output and then simply strip
+  sha1sum < "$1" | tr -d ' -'
 }
 
 # Many apps also ship a libstdc that causes issues in the same way the steam
