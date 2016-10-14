@@ -390,7 +390,7 @@ steam_content_log_watch()
   local line
   local parts
   local validating=0
-  tail --pid $(pgrep -xo steam) -fn0 "$STEAM_DIR/logs/content_log.txt" | \
+  tail --pid $(pgrep -xo steam) -Fn0 "$STEAM_DIR/logs/content_log.txt" | \
   while read line ; do
     # steam prints CRLF into log files (issue #4646)
     # for some reason this does not work when chained above
