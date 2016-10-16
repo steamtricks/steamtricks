@@ -7,12 +7,14 @@ PREFIX = /usr
 VERSION="build-$(shell date +%F)"
 
 all:
-	sed -i 's/STEAMTRICKS_VERSION=".*"/STEAMTRICKS_VERSION=$(VERSION)/' src/steamtricks
+	@ echo "Nothing to compile. Use: install"
 
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL_PROGRAM) src/steamtricks $(DESTDIR)$(PREFIX)/bin/
+	sed -i 's/STEAMTRICKS_VERSION=".*"/STEAMTRICKS_VERSION=$(VERSION)/' \
+	  $(DESTDIR)$(PREFIX)/bin/steamtricks
 
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/lib/systemd/user/
 	$(INSTALL) dist/steamtricksd.service $(DESTDIR)$(PREFIX)/lib/systemd/user/
