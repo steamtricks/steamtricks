@@ -68,7 +68,7 @@ keyvalue_parse()
         if [ $previous_consumed -eq 1 ] ; then
           previous_consumed=0
         else
-          IFS='_'; echo "${section[*]}_$previous='$line'"
+          IFS='_'; echo "local ${section[*]}_$previous='$line'"
           previous_consumed=1
         fi
       fi
