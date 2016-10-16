@@ -442,15 +442,19 @@ steam_openssl_replace()
 {
   echo "replacing steam-runtime openssl libraries..."
   for lib in libcrypto.so.1.0.0 libssl.so.1.0.0 ; do
-    find "$STEAM_RUNTIME/i386" -name $lib | while read found
-    do
-      steam_lib_replace "lib/$lib" "$found"
-    done
+    if [ -d "$STEAM_RUNTIME/i386" ] ; then
+      find "$STEAM_RUNTIME/i386" -name $lib | while read found
+      do
+        steam_lib_replace "lib/$lib" "$found"
+      done
+    fi
 
-    find "$STEAM_RUNTIME/amd64" -name $lib | while read found
-    do
-      steam_lib_replace "lib64/$lib" "$found"
-    done
+    if [ -d "$STEAM_RUNTIME/amd64" ] ; then
+      find "$STEAM_RUNTIME/amd64" -name $lib | while read found
+      do
+        steam_lib_replace "lib64/$lib" "$found"
+      done
+    fi
   done
 }
 
