@@ -16,5 +16,6 @@ install:
 
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/lib/systemd/user/
 	$(INSTALL) dist/steamtricksd.service $(DESTDIR)$(PREFIX)/lib/systemd/user/
+	sed -i '/^#.*/d' $(DESTDIR)$(PREFIX)/lib/systemd/user/steamtricksd.service
 
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/steamtricks
