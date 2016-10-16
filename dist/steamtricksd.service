@@ -11,5 +11,11 @@
 Description=steamtricks daemon
 
 [Service]
-ExecStart=/usr/bin/steamtricks --watch
+# Certain console applications (ex konsole) return immediately if stdin is not
+# available which is undesirable when using to install dependencies as
+# steamtricks needs to wait for completion before continuing. StandardInput
+# options provided by systemd do not seem to be workable and `script` behaves
+# oddly when used inside steamtricks. As such this appears to be the only
+# workable solution. See issue #30 for details. A better solution is welcome.
+ExecStart=/usr/bin/env bash -c 'script -qfec "/usr/bin/steamtricks --watch" /dev/null'
 Restart=on-failure
