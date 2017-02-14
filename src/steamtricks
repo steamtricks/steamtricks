@@ -271,6 +271,7 @@ steamtricks_fix_script()
       echo "-> script failed"
       return 1
     fi
+    ((applied++))
   fi
   return 0
 }
