@@ -504,6 +504,17 @@ steam_openssl_replace()
   done
 }
 
+steam_openssl_replace_check()
+{
+  # check if nvidia is active using glxinfo and fallback to lsmod
+  if (which glxinfo && glxinfo | grep "server glx vendor string: NVIDIA") > /dev/null || \
+    [ $(lsmod | grep "nvidia" | wc -l) -ne 0 ] ; then
+    echo "detected nvidia binary driver, disabling openssl replacement"
+    return 1
+  fi
+  return 0
+}
+
 steamtricks_data_dir()
 {
   # check for config override, but allow git to win
@@ -595,7 +606,7 @@ done
 # initial boot
 steamtricks_config
 remove_incompatible_files_runtime
-if test "$STEAM_OPENSSL_REPLACE" == 1 ; then
+if test "$STEAM_OPENSSL_REPLACE" == 1 && steam_openssl_replace_check ; then
   steam_openssl_replace
 fi
 
