@@ -375,6 +375,25 @@ remove_incompatible_files_runtime()
   fi
 }
 
+steam_app_running_wait()
+{
+  # Allow for multiple apps to be launched simultaneously which will result in
+  # duplicate wait calls once all apps are closed and logs are processed. All
+  # apps launched from steam are parented by a SteamChildMonit process. Once
+  # there are no more processes there are no Steam apps running.
+  if [ "$(pgrep -cx SteamChildMonit)" != "0" ] ; then
+    echo "suspending event processing while apps are running"
+  else
+    return
+  fi
+
+  until [ "$(pgrep -cx SteamChildMonit)" == "0" ] ; do
+    # avoid resource usage while app is running
+    sleep 10
+  done
+  echo "resuming event processing"
+}
+
 steam_content_log_watch()
 {
   echo -n "waiting for steam to start..."
@@ -421,6 +440,8 @@ steam_content_log_watch()
         steamtricks_fix_fetch ${parts[3]} ;;
       *"state changed : Fully Installed,Update Running,")
         steamtricks_fix_apply ${parts[3]} ;;
+      *"state changed : Fully Installed,App Running,")
+        steam_app_running_wait ;;
     esac
   done
 
