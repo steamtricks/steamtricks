@@ -317,21 +317,24 @@ steamtricks_fix_deps()
   local sha1_needs=$(sha1 $prefix-needs)
   echo "-> provides: $provides, requires: $requires, needs: $needs"
 
-  # check if previous deps differ from current and prompt to install if changed.
-  # It would be preferable to be able to check if any dependencies are available
-  # and not installed, but `zypper search --provides` does not differentiate
-  # between 32bit and 64bit packages so it would be non-trivial. Alternatively
-  # updating `zypper in --dry-run` to work without sudo would allow a check
-  # before prompting. In the meantime the best that can be done is cache.
-  local return
+  # check if previous deps differ from current
+  local return=0
   if [ "$sha1_needs" != "$cache_needs" ] ; then
-    xdg-terminal '/usr/bin/env bash -c " \
-      echo \"steamtricks is attempting to install dependencies for '"$app_name"'.\"; \
-      sudo zypper in -C $(cat '$prefix-needs') || sleep 5"'
-    return=1
+    # check if new packages to install before prompting the user
+    output=$(zypper --root / --no-refresh --non-interactive --ignore-unknown \
+      in --dry-run --capability $(cat $prefix-needs) 2>&1)
+    # the least language specific way to determine if new packages to install
+    if [ $? -eq 0 ] && echo "$output" | tail -n 1 | grep "(y): y" > /dev/null ; then
+      echo "-> new packages to install, prompt user"
+      xdg-terminal '/usr/bin/env bash -c " \
+        echo \"steamtricks is attempting to install dependencies for '"$app_name"'.\"; \
+        sudo zypper in -C $(cat '$prefix-needs') || sleep 5"'
+      return=1
+    else
+      echo "-> change in needs, but no new matching packages"
+    fi
   else
     echo "-> nothing new"
-    return=0
   fi
 
   # at minimum sha1_files changed
