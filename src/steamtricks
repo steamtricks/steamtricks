@@ -51,6 +51,18 @@ strip_quotes()
   echo "$clean"
 }
 
+strip_name()
+{
+  local clean="$1"
+  clean="${clean// /_}"
+  clean="${clean//\$/}"
+  clean="${clean//_&_/}"
+  clean="${clean//&/}"
+  clean="${clean//:/}"
+  clean="${clean//;/}"
+  echo "$clean"
+}
+
 keyvalue_parse()
 {
   local file="$1"
@@ -317,7 +329,7 @@ steamtricks_fix_deps()
   local requires=$(/usr/lib/rpm/find-requires < $prefix-files | sort | tee $prefix-requires | wc -l)
   # look for data package for the app in question
   echo "steamtricks-data-$app_id" >> $prefix-requires
-  echo "steamtricks-data-$app_id-${app_name// /_}" >> $prefix-requires
+  echo "steamtricks-data-$app_id-$(strip_name "$app_name")" >> $prefix-requires
   local needs=$(comm -23 $prefix-requires $prefix-provides | tee $prefix-needs | wc -l)
   local sha1_needs=$(sha1 $prefix-needs)
   echo "-> provides: $provides, requires: $requires, needs: $needs"
