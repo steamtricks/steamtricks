@@ -46,6 +46,8 @@ strip_quotes()
   local clean="$1"
   clean="${clean%\"}"
   clean="${clean#\"}"
+  # escape single quotes
+  clean="${clean//\'/\'\"\'\"\'}"
   echo "$clean"
 }
 
