@@ -309,7 +309,7 @@ steamtricks_fix_deps()
   local cache="$CONFIG_CACHE_DIR/$app_id"
   local cache_files cache_needs
   if [ -f "$cache" ] ; then
-    read cache_files cache_needs <<< $(cat "$cache")
+    read -d "\n" cache_files cache_needs <<< $(cat "$cache")
     echo "cache loaded"
     echo "-> files: $cache_files"
     echo "-> needs: $cache_needs"
