@@ -315,8 +315,9 @@ steamtricks_fix_deps()
     echo "-> needs: $cache_needs"
   fi
 
-  # limit dep check to .so files or files with no . at all (presumed executable)
-  find . -type f -regextype posix-extended -regex ".*/((.+(\.so(\.[0-9]+)?))|([^.]+))$" > $prefix-files
+  # limit dep check to .so/.bin or files with no . at all (presumed executable)
+  find . -type f -regextype posix-extended -regex \
+    ".*/((.+(\.so(\.[0-9]+)*|\.bin(\..*)?))|([^.]+))$" > $prefix-files
   local sha1_files=$(sha1 $prefix-files)
   if [ "$sha1_files" == "$cache_files" ] ; then
     echo "file list identical"
