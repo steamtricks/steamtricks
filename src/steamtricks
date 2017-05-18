@@ -557,23 +557,19 @@ Options:
 -h, --help            Display this message and exit
 
 Commands:
-clean                 Clean steam-runtime and steamapps directories
+clean                 Clean steam-runtime and steamapps directories (default)
 _EOF_
 }
 
-steamtricks_handle_option()
-{
+until [ $# -eq 0 ] ; do
   case "$1" in
     --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
+    clean) ;;
     -*) echo "unknown option $1" ; exit 1 ;;
-    *) return 1 ;;
+    *) echo "unknown command $1" ; exit 1 ;;
   esac
-  return 0
-}
-
-while steamtricks_handle_option $1 ; do
   shift
 done
 
