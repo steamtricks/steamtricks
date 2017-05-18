@@ -462,6 +462,10 @@ steam_content_log_watch()
         steamtricks_fix_apply ${parts[3]} ;;
       *"state changed : Fully Installed,App Running,")
         steam_app_running_wait ;;
+
+      # commands
+      "steamtricks_fix_apply"*)
+        steamtricks_fix_apply ${parts[1]} ;;
     esac
   done
 
@@ -557,8 +561,16 @@ Options:
 -h, --help            Display this message and exit
 
 Commands:
+apply [APP_ID]        Force apply fixes to an app
 clean                 Clean steam-runtime and steamapps directories (default)
 _EOF_
+}
+
+steamtricks_command_apply()
+{
+  local app_id="$1"
+  rm -f "$CONFIG_CACHE_DIR/$app_id"
+  echo "steamtricks_fix_apply $app_id" >> "$STEAM_DIR/logs/content_log.txt"
 }
 
 until [ $# -eq 0 ] ; do
@@ -566,6 +578,13 @@ until [ $# -eq 0 ] ; do
     --version) echo "$STEAMTRICKS_VERSION"; exit 0; ;;
     --watch) STEAMTRICKS_WATCH=1 ;;
     -h|--help) steamtricks_usage ; exit 0 ;;
+    apply)
+      if [ $# -lt 2 ] ; then
+        echo "an app ID is required"
+      else
+        steamtricks_command_apply "$2"
+      fi
+      exit ;;
     clean) ;;
     -*) echo "unknown option $1" ; exit 1 ;;
     *) echo "unknown command $1" ; exit 1 ;;
