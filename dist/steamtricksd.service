@@ -19,3 +19,4 @@ Description=steamtricks daemon
 # workable solution. See issue #30 for details. A better solution is welcome.
 ExecStart=/usr/bin/env bash -c 'script -qfec "/usr/bin/steamtricks --watch" /dev/null'
 Restart=on-failure
+SyslogIdentifier=steamtricksd
