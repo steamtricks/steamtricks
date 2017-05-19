@@ -5,9 +5,12 @@ installed.
 ![Multiwinia dependencies check](screenshot/multiwinia-dependencies.png)
 
 If missing dependencies were found the user will be prompted to install them.
-Any available fixes will be applied any-time the game is updated.
+For example when the "Dota 2 - Vulkan support" DLC is installed Steamtricks will
+automatically prompt the user to install the required Vulkan packages.
 
 ![Multiwinia fixed](screenshot/multiwinia-fixed.png)
+
+Any available fixes will be applied after a game is updated.
 
 # game specific fixes
 
