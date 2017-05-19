@@ -280,7 +280,7 @@ steamtricks_fix_script()
   local script="$1"
   if [ -f "$script" ] ; then
     echo "executing $script"
-    "$script"
+    PATH="$PATH:$STEAMTRICKS_DATA_REPO_DIR/00-common" "$script"
     if [ ! $? -eq 0 ] ; then
       echo "-> script failed"
       return 1
