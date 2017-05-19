@@ -1,6 +1,12 @@
 Steamtricks runs alongside Steam to automatically fix known issues with various
-games on Linux. For example the following will occurred after Multiwinia is
-installed.
+games on Linux.
+
+- Check dependencies and prompt to install missing
+- Apply fixes anytime a game is updated
+- Display status notifications
+- Suspend checks while games are running
+
+The following will occur after Multiwinia is installed.
 
 ![Multiwinia dependencies check](screenshot/multiwinia-dependencies.png)
 
@@ -10,9 +16,15 @@ automatically prompt the user to install the required Vulkan packages.
 
 ![Multiwinia fixed](screenshot/multiwinia-fixed.png)
 
-Any available fixes will be applied after a game is updated.
+Fixes will also be applied after games are updated since local file changes are
+reverted as part of the update process.
 
-# game specific fixes
+Alternatively, for games that work just fine or those for which fixes are not
+available Steamtricks will let you know it checked.
+
+![Aquaria no changes](screenshot/aquaria-no-changes.png)
+
+# game fixes
 
 For a list of game specific fixes currently available see the
 [steamtricks-data repository](https://github.com/steamtricks/steamtricks-data/tree/master/data).
@@ -33,7 +45,7 @@ Once installed just restart Steam to enabled Steamtricks.
 
 # monitor
 
-The output from Steamtricks can be viewed using the following.
+The output from Steamtricks can be viewed using:
 
 ```
 journalctl -f --user-unit steamtricksd
@@ -41,8 +53,8 @@ journalctl -f --user-unit steamtricksd
 
 # manual setup
 
-To try out without the package download the source and run the following from
-the source directory while Steam is running.
+To use directly from source run the following from the source directory
+while Steam is running.
 
 ```
 ./src/steamtricks --watch
@@ -51,4 +63,4 @@ the source directory while Steam is running.
 # more details
 
 Visit the [Steamtricks wiki](https://github.com/steamtricks/steamtricks/wiki)
-for more details including how to try out nightly builds.
+for more details including how to install the nightly builds package.
