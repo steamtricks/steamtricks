@@ -6,7 +6,7 @@
 # - run `systemctl --user daemon-reload` to refresh systemd
 # - run `systemctl --user restart steamtricksd` and so on
 #
-
+#
 [Unit]
 Description=steamtricks daemon
 
